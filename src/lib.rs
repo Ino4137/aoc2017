@@ -34,3 +34,46 @@ pub fn day1_2() {
 
     println!("Day 1, part 2: {}", tot);
 }
+
+use std::cmp::Ordering::*;
+pub fn day2_1() {
+    let checksum: u32 = d_day2.split(|c| c == '\n').map(
+        |row| row.split(char::is_whitespace).fold((9999, 0, 0), |(min, max, sum), num| {
+            let n: u32 = num.parse().unwrap();
+
+            match (n.cmp(&min), n.cmp(&max)) {
+                (Less, Greater) => (n, n, 0),
+                (Less, _)       => (n, max, max-n),
+                (_, Greater)    => (min, n, n-min),
+                (_, _)          => (min, max, sum)
+            }           
+    }).2).sum();
+
+    println!("Day 2, part 1: {}", checksum);
+}
+
+pub fn day2_2() {
+    let mut checksum: u32 = 0;
+    'forlines: for line in d_day2.lines() {
+        let mut line: Vec<u32> = line.split_whitespace().map(|v| v.parse().unwrap()).collect();
+
+        line.sort();
+        line.reverse();
+
+        let mut position = 0;
+        while position < line.len() {
+            let mut small_position = position + 1;
+            while small_position < line.len(){
+
+                if line[position] % line[small_position] == 0 {
+                    checksum += line[position] / line[small_position];
+                    continue 'forlines
+                }
+                small_position += 1;
+            }
+            position += 1; 
+        }
+        unreachable!("Couldn't find a divisible pair in: {:?}", line); 
+    }
+    println!("Day 2, part 2: {}", checksum);
+}
