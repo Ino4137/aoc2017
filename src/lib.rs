@@ -77,3 +77,50 @@ pub fn day2_2() {
     }
     println!("Day 2, part 2: {}", checksum);
 }
+
+pub fn day3_1() {
+    // each port underneath is actually on a Cartesian plane
+    let port = Port::new(312051);
+
+    println!("Day 3, part 1: {} {:?}", port.distance(), (port.x, port.y));
+
+    struct Port {
+        pub id: u32,
+        pub x: i64,
+        pub y: i64
+    }
+
+    impl Port {
+        fn distance(&self) -> i64 {
+            self.x.abs() + self.y.abs()
+        }
+        fn new(id: u32) -> Port {
+            let mut count = id.clone() - 1;
+            // amm per move, count of moves, iters in the same direction
+            let mut timer: (i64, i64, i64) = (1, 0, 1);
+            let mut xy: (i64, i64) = (0, 0);
+
+            'outer: loop {
+                while timer.1 < timer.2 {
+                    xy.0 += timer.0;
+                    count -= 1;
+                    if count == 0 {break 'outer}
+                    timer.1 += 1;
+                }
+                timer.1 = 0;
+                while timer.1 < timer.2 {
+                    xy.1 += timer.0;
+                    count -= 1;
+                    if count == 0 {break 'outer}
+                    timer.1 += 1;
+                }
+                timer.0 *= -1;
+                timer.1 = 0;
+                timer.2 += 1;
+            }
+            Port {
+                id, x: xy.0, y: xy.1
+            }
+        }
+    }
+}
