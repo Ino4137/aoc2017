@@ -101,6 +101,7 @@ pub fn day3_1() {
             let mut xy: (i64, i64) = (0, 0);
 
             'outer: loop {
+                if count == 0 {break 'outer}
                 while timer.1 < timer.2 {
                     xy.0 += timer.0;
                     count -= 1;
@@ -111,7 +112,6 @@ pub fn day3_1() {
                 while timer.1 < timer.2 {
                     xy.1 += timer.0;
                     count -= 1;
-                    if count == 0 {break 'outer}
                     timer.1 += 1;
                 }
                 timer.0 *= -1;
@@ -120,6 +120,70 @@ pub fn day3_1() {
             }
             Port {
                 id, x: xy.0, y: xy.1
+            }
+        }
+    }
+}
+
+use std::collections::HashMap;
+pub fn day3_2() {
+    // each port underneath is actually on a Cartesian plane
+    type XYV = (i64, i64, i64);
+    let mut plane: HashMap<u32, XYV> = HashMap::new();
+    plane.insert(1, (0, 0, 1));
+    println!("Day 3, Part 2: {}", Port::find_first_gt(312051, &mut plane));
+ 
+    fn neighbors(x1: i64, y1: i64, x: i64, y: i64) -> bool {
+            if ((x1 - x).abs() > 1 || (y1 - y).abs() > 1) 
+            && ((x1 - x).abs() + (y1 - y).abs()) > 1 {
+                false
+            } else { true }
+    }
+
+    struct Port {
+        pub id: u32,
+        pub x: i64,
+        pub y: i64
+    }
+
+    impl Port {
+        fn find_first_gt(id: u32, hmap: &mut HashMap<u32, XYV>) -> i64 {
+            let mut pos: u32 = 1;
+            // amm per move, count of moves, iters in the same direction
+            let mut timer: (i64, i64, i64) = (1, 0, 1);
+            let mut xy: (i64, i64) = (0, 0);
+
+            'outer: loop {
+                while timer.1 < timer.2 {
+                    xy.0 += timer.0;
+                    let mut value: i64 = 0;
+                    for (_, &(x, y, v)) in hmap.iter() {
+                        if neighbors(xy.0, xy.1, x, y){
+                            value += v;
+                        }
+                    }
+                    if value > id as i64 {return value}
+                    pos += 1;
+                    hmap.insert(pos, (xy.0, xy.1, value));
+                    timer.1 += 1;
+                }
+                timer.1 = 0;
+                while timer.1 < timer.2 {
+                    xy.1 += timer.0;
+                    let mut value: i64 = 0;
+                    for (_, &(x, y, v)) in hmap.iter() {
+                        if neighbors(xy.0, xy.1, x, y) {
+                            value += v;
+                        }
+                    }
+                    if value > id as i64 {return value}
+                    pos += 1;
+                    hmap.insert(pos, (xy.0, xy.1, value));
+                    timer.1 += 1;
+                }
+                timer.0 *= -1;
+                timer.1 = 0;
+                timer.2 += 1;
             }
         }
     }
