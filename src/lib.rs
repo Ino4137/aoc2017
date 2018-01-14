@@ -188,3 +188,42 @@ pub fn day3_2() {
         }
     }
 }
+
+pub fn day4_1() {
+    let mut amm = 0;
+    'lines: for line in d_day4.lines() {
+        let mut prev = Vec::new();
+        for pass in line.split_whitespace() {
+            if prev.contains(&pass) {
+                continue 'lines
+            }
+            prev.push(pass);
+        }
+        amm += 1;
+    }
+    println!("Day 4, Part 1: {}", amm);
+}
+
+pub fn day4_2() {
+    let mut amm = 0;
+    'lines: for line in d_day4.lines() {
+        let mut prev = Vec::new();
+        for pass in line.split_whitespace() {
+            let mut pass = pass.chars().collect::<Vec<char>>();
+            pass.sort();
+            pass.iter().collect::<String>();
+            for val in &prev {
+                if *val == pass {
+                    continue 'lines
+                }
+            }
+            prev.push(pass);
+        }
+        amm += 1;
+    }
+    println!("Day 4, Part 2: {}", amm);
+}
+
+pub fn day5_1() {
+    
+}
