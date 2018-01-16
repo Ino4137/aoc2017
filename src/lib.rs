@@ -1,5 +1,5 @@
 #![allow(non_upper_case_globals)]
-//#![feature(slice_patterns)]
+#![feature(trace_macros)]
 
 mod data;
 use data::*;
@@ -225,5 +225,31 @@ pub fn day4_2() {
 }
 
 pub fn day5_1() {
-    
+    let mut instructions: Vec<i32> = d_day5.lines().map(|v| {
+        v.parse().unwrap()
+    }).collect();
+
+    let mut node = 0;
+    let mut index_next: usize = 0;
+    let mut steps = 0;
+
+    loop {
+        if let Some(x) = instructions.get_mut(index_next) {
+            node = *x;
+            *x += 1; 
+        };
+
+        if node.is_negative() {
+            index_next -= node.abs() as usize
+        } else {
+            index_next += node as usize;
+        }
+
+        if instructions.len() < index_next - 1 {
+            break;
+        }
+        steps += 1
+    }
+
+    println!("Day 5, Part 1: {:?}", steps);
 }
