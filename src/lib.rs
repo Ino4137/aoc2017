@@ -403,3 +403,172 @@ pub fn day6_2() {
 
     println!("Day 6, Part 2: {}", clock);
 }
+
+pub fn day7_1() {
+    #[derive(Debug, Clone)]
+    struct Prog {
+        pub name: String,
+        pub weight: u32,
+        pub holds: Option<Vec<String>>,
+        pub owned_by: Option<String>
+    }
+
+    let parse_p = |line: &str| {
+        // extracts the name and the weigth
+        let get_nw = |data: &mut Vec<String>| {
+            let name = data[0].clone();
+            data[1].remove(0);
+            let len = data[1].len();
+            data[1].remove(len - 1);
+            let weight: u32 = data[1].parse().unwrap();
+
+            (name, weight)
+        };
+
+        let mut data: Vec<String> = line.split_whitespace().map(|w| w.to_string()).collect();
+        let (name, weight) = get_nw(&mut data);
+
+        // tests if there are childeren or not
+        if data.len() == 2 {        
+            Prog {
+                name,
+                weight,
+                holds: None,
+                owned_by: None
+            }
+        } else {
+            let mut children = Vec::new();
+            let child_amm = data.len() - 3;
+
+            'children: for n in 0..child_amm {
+                let mut buffer = String::new();
+                for symbol in data[3 + n].chars() {
+                    if symbol == ',' {
+                        children.push(buffer);
+                        continue 'children
+                    }
+                    buffer.push(symbol);
+                }
+                // last child has no comma
+                children.push(buffer);
+            }
+
+            Prog {
+                name,
+                weight,
+                holds: Some(children),
+                owned_by: None
+            }
+        }
+    };
+
+    let mut dict: HashMap<String, Prog> = HashMap::new();
+
+    // parse the input
+    for line in d_day7.lines() {
+        let prog = parse_p(line);
+        //println!("{:?}", prog);
+        dict.insert(prog.name.clone(), prog);
+    }
+
+    // if any key is not in the owned_by field of any other prog, then it is the root key/Prog
+    let root = 'end: loop {
+        'nextr: for k in dict.keys() {
+            for v in dict.values() {
+                if v.holds.is_some() {
+                    if v.clone().holds.unwrap().contains(k) {
+                        continue 'nextr
+                    }
+                }
+            }
+            break 'end k
+        }
+    };
+
+    println!("Day 7, Part 1: {}", root);
+}
+
+pub fn day7_2() {
+    #[derive(Debug, Clone)]
+    struct Prog {
+        pub name: String,
+        pub weight: u32,
+        pub holds: Option<Vec<String>>,
+        pub owned_by: Option<String>
+    }
+
+    let parse_p = |line: &str| {
+        // extracts the name and the weigth
+        let get_nw = |data: &mut Vec<String>| {
+            let name = data[0].clone();
+            data[1].remove(0);
+            let len = data[1].len();
+            data[1].remove(len - 1);
+            let weight: u32 = data[1].parse().unwrap();
+
+            (name, weight)
+        };
+
+        let mut data: Vec<String> = line.split_whitespace().map(|w| w.to_string()).collect();
+        let (name, weight) = get_nw(&mut data);
+
+        // tests if there are childeren or not
+        if data.len() == 2 {        
+            Prog {
+                name,
+                weight,
+                holds: None,
+                owned_by: None
+            }
+        } else {
+            let mut children = Vec::new();
+            let child_amm = data.len() - 3;
+
+            'children: for n in 0..child_amm {
+                let mut buffer = String::new();
+                for symbol in data[3 + n].chars() {
+                    if symbol == ',' {
+                        children.push(buffer);
+                        continue 'children
+                    }
+                    buffer.push(symbol);
+                }
+                // last child has no comma
+                children.push(buffer);
+            }
+
+            Prog {
+                name,
+                weight,
+                holds: Some(children),
+                owned_by: None
+            }
+        }
+    };
+
+    let mut dict: HashMap<String, Prog> = HashMap::new();
+
+    // parse the input
+    for line in d_day7.lines() {
+        let prog = parse_p(line);
+        //println!("{:?}", prog);
+        dict.insert(prog.name.clone(), prog);
+    }
+
+    fn rec_sum_of_branches(name: &String, dict: &HashMap<String, Prog>) -> u32 {
+        let Prog { ref name, ref weight, holds: ref branch, ref owned_by } = *dict.get(name).unwrap();
+        let mut sum: Vec<u32> = Vec::new();   
+        if branch.is_some() {
+            for key in branch.clone().unwrap().iter() { 
+                sum.push(rec_sum_of_branches(key, dict));
+            } 
+        }
+        sum.push(*weight);
+        println!("{}'s branch: {:?}", name, sum);
+        sum.iter().sum::<u32>()
+    }
+
+    // this solution is valid due to keen observation
+    // proper one would have the result presented but oh well
+    rec_sum_of_branches(&"gozhrsf".to_owned(), &dict); // -5
+}
