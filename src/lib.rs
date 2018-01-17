@@ -1,5 +1,6 @@
 #![allow(non_upper_case_globals)]
 #![feature(trace_macros)]
+#![allow(unused_assignments)]
 
 mod data;
 use data::*;
@@ -286,4 +287,99 @@ pub fn day5_2() {
     }
 
     println!("Day 5, Part 2: {:?}", steps);
+}
+
+pub fn day6_1() {
+    let mut premuts: Vec<Vec<u32>> = Vec::new();
+    let mut curr: Vec<u32> = d_day6.split_whitespace().map(|n| {
+        n.parse().unwrap()
+    }).collect();
+    let mut amm = 0;
+    premuts.push(curr.clone());
+
+    'redistribution: loop {
+        let mut max = 0;
+        for num in 0..16 {
+            if curr[num] > curr[max] {
+                max = num;
+            }
+        }
+        
+        let mut value = 0;
+        if let Some(x) = curr.get_mut(max) {
+            value = x.clone();
+            *x = 0;
+        } else {
+            unreachable!("Out of bounds on assigning value");
+        }
+
+        for index in (0..16).cycle().skip(max + 1) {
+            curr[index] += 1;
+            value -= 1;
+            if value == 0 {
+                break
+            }
+        }
+
+        amm += 1;
+        println!("{}: {:?}",amm, curr);
+        if premuts.contains(&curr) {
+            break 'redistribution
+        }
+        premuts.push(curr.clone());
+    }
+
+    println!("Day 6, Part 1: {}", amm);
+}
+
+pub fn day6_2() {
+    let mut premuts: Vec<Vec<u32>> = Vec::new();
+    let mut curr: Vec<u32> = d_day6.split_whitespace().map(|n| {
+        n.parse().unwrap()
+    }).collect();
+    premuts.push(curr.clone());
+
+    let mut clock = 0;
+    let mut enc = false;
+
+    'redistribution: loop {
+        let mut max = 0;
+        for num in 0..16 {
+            if curr[num] > curr[max] {
+                max = num;
+            }
+        }
+        
+        let mut value = 0;
+        if let Some(x) = curr.get_mut(max) {
+            value = x.clone();
+            *x = 0;
+        } else {
+            unreachable!("Out of bounds on assigning value");
+        }
+
+        for index in (0..16).cycle().skip(max + 1) {
+            curr[index] += 1;
+            value -= 1;
+            if value == 0 {
+                break
+            }
+        }
+
+        if enc {
+            clock += 1;
+        }
+
+        if premuts.contains(&curr) {
+            if enc {
+                break 'redistribution
+            } else {
+                enc = true;
+                premuts = Vec::new();
+            }
+        }
+        premuts.push(curr.clone());
+    }
+
+    println!("Day 6, Part 2: {}", clock);
 }

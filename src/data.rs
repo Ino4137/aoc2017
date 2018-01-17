@@ -1589,5 +1589,5 @@ pub static d_day5: &'static str = "2
 -798
 -943";
 
-
+pub static d_day6: &'static str = "5	1	10	0	1	7	13	14	3	12	8	10	7	12	0	6";
 
