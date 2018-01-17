@@ -1,4 +1,3 @@
-
 extern crate aoc_2017;
 
 fn main() {

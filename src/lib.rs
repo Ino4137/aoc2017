@@ -8,8 +8,10 @@ use data::*;
 pub fn day1_1() {
     let mut data: Vec<char> = d_day1.chars().collect();
     let firstchar = data[0];
+    // so that it gets grouped w/o making it wrap around
     data.push(firstchar);
 
+    // leaves the number in place if the following one is the same
     let tot: u32 = data.windows(2).map(|window| {
         let (uno, dos) = (window[0], window[1]);
         if uno == dos {
@@ -23,6 +25,8 @@ pub fn day1_1() {
 }
 
 pub fn day1_2() {
+    // zip every character with its corresponding one, 
+    // half the list later
     let tot: u32 = d_day1.chars().zip(
         d_day1.chars().cycle().skip(
             d_day1.chars().count() / 2
@@ -39,6 +43,8 @@ pub fn day1_2() {
 use std::cmp::Ordering::*;
 pub fn day2_1() {
     let checksum: u32 = d_day2.split(|c| c == '\n').map(
+        // in place of every row a tuple is left, 
+        // that holds the row's "sum"
         |row| row.split(char::is_whitespace).fold((9999, 0, 0), |(min, max, sum), num| {
             let n: u32 = num.parse().unwrap();
 
@@ -61,6 +67,8 @@ pub fn day2_2() {
         line.sort();
         line.reverse();
 
+        // goes over every pair in a line, 
+        // trying to find a divisible pair
         let mut position = 0;
         while position < line.len() {
             let mut small_position = position + 1;
@@ -158,6 +166,9 @@ pub fn day3_2() {
                 while timer.1 < timer.2 {
                     xy.0 += timer.0;
                     let mut value: i64 = 0;
+                    // should only loop through its neighbors,
+                    // the HM keys should be the x and y coords
+                    // oh well
                     for (_, &(x, y, v)) in hmap.iter() {
                         if neighbors(xy.0, xy.1, x, y){
                             value += v;
@@ -211,6 +222,7 @@ pub fn day4_2() {
         let mut prev = Vec::new();
         for pass in line.split_whitespace() {
             let mut pass = pass.chars().collect::<Vec<char>>();
+            // comparing sorted strings
             pass.sort();
             pass.iter().collect::<String>();
             for val in &prev {
@@ -240,16 +252,19 @@ pub fn day5_1() {
             *x += 1; 
         };
 
+        // usize cannot be negative, u stands for unsigned
         if node.is_negative() {
             index_next -= node.abs() as usize
         } else {
             index_next += node as usize;
         }
 
+        // if the next step would be out of bounds
         if instructions.len() < index_next - 1 {
             break;
         }
-        steps += 1
+        // take a step
+        steps += 1;
     }
 
     println!("Day 5, Part 1: {:?}", steps);
@@ -295,10 +310,12 @@ pub fn day6_1() {
         n.parse().unwrap()
     }).collect();
     let mut amm = 0;
+    // push the original state as the first premutation
     premuts.push(curr.clone());
 
     'redistribution: loop {
         let mut max = 0;
+        // <0, 15>
         for num in 0..16 {
             if curr[num] > curr[max] {
                 max = num;
@@ -313,6 +330,7 @@ pub fn day6_1() {
             unreachable!("Out of bounds on assigning value");
         }
 
+        // actually redistribute the memory
         for index in (0..16).cycle().skip(max + 1) {
             curr[index] += 1;
             value -= 1;
@@ -374,6 +392,8 @@ pub fn day6_2() {
             if enc {
                 break 'redistribution
             } else {
+                // loop through it again, 
+                // this time count the steps from the start of the loop
                 enc = true;
                 premuts = Vec::new();
             }
