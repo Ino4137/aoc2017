@@ -1,6 +1,7 @@
-#![allow(non_upper_case_globals)]
 #![feature(trace_macros)]
+#![allow(non_upper_case_globals)]
 #![allow(unused_assignments)]
+#![allow(unused_variables)]
 
 mod data;
 use data::*;
@@ -571,4 +572,217 @@ pub fn day7_2() {
     // this solution is valid due to keen observation
     // proper one would have the result presented but oh well
     rec_sum_of_branches(&"gozhrsf".to_owned(), &dict); // -5
+}
+
+pub fn day8_1() {
+    let mut registers: HashMap<String, i32> = HashMap::new();
+
+    fn parse_l(line: String, registers: &mut HashMap<String, i32>) -> &mut HashMap<String, i32>{
+        let query = line.split_whitespace().map(|d| d.to_owned()).collect::<Vec<String>>();
+        registers.entry(query[0].clone()).or_insert(0);
+        registers.entry(query[4].clone()).or_insert(0);
+        let cond = query[6].parse::<i32>().unwrap();
+        let amm = query[2].parse::<i32>().unwrap();
+
+        match &*query[5] {
+            ">" => {
+                if *registers.get(&*query[4]).unwrap() > cond {
+                    if query[1] == "dec" {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x -= amm;
+                        }
+                    } else {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x += amm;
+                        }
+                    }
+                }
+            },
+            "<" => {
+                if *registers.get(&*query[4]).unwrap() < cond {
+                    if query[1] == "dec" {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x -= amm;
+                        }
+                    } else {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x += amm;
+                        }
+                    }
+                }
+            },
+            ">=" => {
+                if *registers.get(&*query[4]).unwrap() >= cond {
+                    if query[1] == "dec" {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x -= amm;
+                        }
+                    } else {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x += amm;
+                        }
+                    }
+                }
+            },
+            "<=" => {
+                if *registers.get(&*query[4]).unwrap() <= cond {
+                    if query[1] == "dec" {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x -= amm;
+                        }
+                    } else {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x += amm;
+                        }
+                    }
+                }
+            },
+            "==" => {
+                if *registers.get(&*query[4]).unwrap() == cond {
+                    if query[1] == "dec" {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x -= amm;
+                        }
+                    } else {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x += amm;
+                        }
+                    }
+                }
+            },
+            "!=" => {
+                if *registers.get(&*query[4]).unwrap() != cond {
+                    if query[1] == "dec" {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x -= amm;
+                        }
+                    } else {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x += amm;
+                        }
+                    }
+                }
+            },
+            _ => unreachable!(),
+        }
+        registers
+    };
+
+    for line in d_day8.lines() {
+        parse_l(line.to_owned(), &mut registers);
+    }
+
+    println!("Day 8, Part 1: {:?}", registers.iter().fold((String::new(), -999), |(name, max), (k, v)| { 
+        if v > &max {
+            (k.clone(), v.clone())
+        } else {
+            (name, max)
+        }}));
+}
+
+pub fn day8_2() {
+    let mut registers: HashMap<String, i32> = HashMap::new();
+    let mut highest = 0;
+
+    fn parse_l<'a>(line: String, registers: &'a mut HashMap<String, i32>, highest: &mut i32) -> &'a mut HashMap<String, i32>{
+        let query = line.split_whitespace().map(|d| d.to_owned()).collect::<Vec<String>>();
+        registers.entry(query[0].clone()).or_insert(0);
+        registers.entry(query[4].clone()).or_insert(0);
+        let cond = query[6].parse::<i32>().unwrap();
+        let amm = query[2].parse::<i32>().unwrap();
+        
+        match &*query[5] {
+            ">" => {
+                if *registers.get(&*query[4]).unwrap() > cond {
+                    if query[1] == "dec" {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x -= amm;
+                        }
+                    } else {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x += amm;
+                        }
+                    }
+                }
+            },
+            "<" => {
+                if *registers.get(&*query[4]).unwrap() < cond {
+                    if query[1] == "dec" {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x -= amm;
+                        }
+                    } else {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x += amm;
+                        }
+                    }
+                }
+            },
+            ">=" => {
+                if *registers.get(&*query[4]).unwrap() >= cond {
+                    if query[1] == "dec" {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x -= amm;
+                        }
+                    } else {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x += amm;
+                        }
+                    }
+                }
+            },
+            "<=" => {
+                if *registers.get(&*query[4]).unwrap() <= cond {
+                    if query[1] == "dec" {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x -= amm;
+                        }
+                    } else {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x += amm;
+                        }
+                    }
+                }
+            },
+            "==" => {
+                if *registers.get(&*query[4]).unwrap() == cond {
+                    if query[1] == "dec" {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x -= amm;
+                        }
+                    } else {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x += amm;
+                        }
+                    }
+                }
+            },
+            "!=" => {
+                if *registers.get(&*query[4]).unwrap() != cond {
+                    if query[1] == "dec" {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x -= amm;
+                        }
+                    } else {
+                        if let Some(x) = registers.get_mut(&*query[0]) {
+                            *x += amm;
+                        }
+                    }
+                }
+            },
+            _ => unreachable!(),
+        }
+        if let Some(x) = registers.get(&*query[0]) {
+            if x > highest {
+                *highest = *x;
+            }
+        }
+        registers
+    };
+
+    for line in d_day8.lines() {
+        parse_l(line.to_owned(), &mut registers, &mut highest);
+    }
+
+    println!("Day 8, Part 2: {}", highest);
 }
