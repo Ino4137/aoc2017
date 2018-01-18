@@ -579,8 +579,11 @@ pub fn day8_1() {
 
     fn parse_l(line: String, registers: &mut HashMap<String, i32>) -> &mut HashMap<String, i32>{
         let query = line.split_whitespace().map(|d| d.to_owned()).collect::<Vec<String>>();
+        
+        // create entries for the registers, if not-existent
         registers.entry(query[0].clone()).or_insert(0);
         registers.entry(query[4].clone()).or_insert(0);
+
         let cond = query[6].parse::<i32>().unwrap();
         let amm = query[2].parse::<i32>().unwrap();
 
@@ -686,8 +689,11 @@ pub fn day8_2() {
 
     fn parse_l<'a>(line: String, registers: &'a mut HashMap<String, i32>, highest: &mut i32) -> &'a mut HashMap<String, i32>{
         let query = line.split_whitespace().map(|d| d.to_owned()).collect::<Vec<String>>();
+
+        // create entries for the registers, if not-existent
         registers.entry(query[0].clone()).or_insert(0);
         registers.entry(query[4].clone()).or_insert(0);
+        
         let cond = query[6].parse::<i32>().unwrap();
         let amm = query[2].parse::<i32>().unwrap();
         
@@ -785,4 +791,124 @@ pub fn day8_2() {
     }
 
     println!("Day 8, Part 2: {}", highest);
+}
+
+pub fn day9_1() {
+    #[derive(Debug)]
+    struct Stream {
+        pub data: Vec<char>
+    }
+
+    impl Stream {
+        fn new(data: &str) -> Stream {
+            let data = data.chars().collect::<Vec<char>>();
+            Stream {
+                data
+            }
+        }
+        fn score(&self) -> u32 {
+            let mut level = 1;
+            let mut score = 0;
+            let mut in_garbage = false;
+            let mut iterator = self.data.iter();
+            
+            while let Some(x) = iterator.next() {
+                match x {
+                    &'<' => {
+                        if !in_garbage {
+                            in_garbage = true;
+                        }
+                    },
+                    &'>' => {
+                        in_garbage = false;
+                    },
+                    &'{' => {
+                        if !in_garbage {
+                            score += level;
+                            level += 1;
+                        }
+                    },
+                    &'}' => {
+                        if !in_garbage {
+                            level -= 1;
+                        }
+                    },
+                    &'!' => {
+                        // skip one
+                        iterator.next();
+                    },
+                    _   => {
+                        // null
+                    }
+                }
+            }
+            score
+        } 
+    }
+    println!("Day 9, Part 1: {:?}", Stream::new(d_day9).score());
+}
+
+pub fn day9_2() {
+    #[derive(Debug)]
+    struct Stream {
+        pub data: Vec<char>
+    }
+
+    impl Stream {
+        fn new(data: &str) -> Stream {
+            let data = data.chars().collect::<Vec<char>>();
+            Stream {
+                data
+            }
+        }
+        fn scan(&self) -> (u32, u32) {
+            let mut level = 1;
+            let mut score = 0;
+            let mut garbage = 0;
+            let mut in_garbage = false;
+            let mut iterator = self.data.iter();
+            
+            while let Some(x) = iterator.next() {
+                match x {
+                    &'<' => {
+                        if !in_garbage {
+                            in_garbage = true;
+                        } else {
+                            garbage += 1
+                        }
+                    },
+                    &'>' => {
+                        in_garbage = false;
+                    },
+                    &'{' => {
+                        if !in_garbage {
+                            score += level;
+                            level += 1;
+                        } else {
+                            garbage += 1;
+                        }
+                    },
+                    &'}' => {
+                        if !in_garbage {
+                            level -= 1;
+                        } else {
+                            garbage += 1;
+                        }
+                    },
+                    &'!' => {
+                        // skip one
+                        iterator.next();
+                    },
+                    _   => {
+                        if in_garbage {
+                            garbage += 1;
+                        }
+                    }
+                }
+            }
+            (score, garbage)
+        } 
+    }
+    let (score, garbage) = Stream::new(d_day9).scan();
+    println!("Day 9, Part 2: score:{}, in garbage:{}",score, garbage);
 }
