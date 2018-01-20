@@ -912,3 +912,89 @@ pub fn day9_2() {
     let (score, garbage) = Stream::new(d_day9).scan();
     println!("Day 9, Part 2: score:{}, in garbage:{}",score, garbage);
 }
+
+pub fn day10_1() {
+    #[derive(Debug)]
+    struct Knot {
+        list: Vec<u32>,
+        curr_pos: u32,
+        skip_size: u32
+    }
+    impl Knot {
+        fn new(list: Vec<u32>) -> Knot {
+            Knot {
+                list,
+                curr_pos: 0,
+                skip_size: 0,
+            }
+        }
+        fn incr_pos(&mut self, chan: u32) {
+            if self.list.len() as u32 <= self.curr_pos + chan + self.skip_size {
+                self.curr_pos = self.curr_pos + chan + self.skip_size - self.list.len() as u32;
+            } else {
+                self.curr_pos += chan + self.skip_size;
+            }
+        }
+        fn twist(&mut self, length: &u32) {
+            // 0 and 1 change nothing in the list
+            if *length != 0 && *length != 1 {
+                let twisted: Vec<u32> = self.list.clone().into_iter().cycle()
+                    .skip(self.curr_pos as usize)
+                    .take(*length as usize).collect();
+                let mut twisted: Vec<u32> = twisted.into_iter().rev().collect();
+
+                let mut not_taken: Vec<u32> = self.list.clone().into_iter().cycle()
+                    .skip((self.curr_pos + length) as usize)
+                    .take(self.list.len() - *length as usize).collect();
+
+                let mut temp: Vec<u32> = Vec::new();
+
+                match (self.curr_pos + length).cmp(&(self.list.len() as u32)) {
+                    Greater => {
+                        let len = twisted.len();
+                        let amm_pushed = self.curr_pos + length - self.list.len() as u32;
+                        temp.append(
+                            &mut twisted.clone().into_iter().skip(len - amm_pushed as usize).collect()
+                        );
+                        temp.append(&mut not_taken);
+                        temp.append(
+                            &mut twisted.into_iter().take(len - amm_pushed as usize).collect()
+                        );
+                    },
+                    Equal => {
+                        temp.append(&mut not_taken);
+                        temp.append(&mut twisted);
+                    },
+                    Less => {
+                        let len = not_taken.len();
+                        temp.append(
+                            &mut not_taken.clone().into_iter().skip(len - self.curr_pos as usize).collect()
+                        );
+                        temp.append(&mut twisted);
+                        temp.append(
+                            &mut not_taken.into_iter().take(len - self.curr_pos as usize).collect()
+                        );
+                    }
+                } 
+                self.list = temp
+            }
+        }
+        fn hash(&mut self, lengths: Vec<u32>) {
+            // reverses since it executes by popping them
+            let mut lengths: Vec<u32> = lengths.into_iter().rev().collect();
+
+            while let Some(x) = lengths.pop() {
+                self.twist(&x);    
+                self.incr_pos(x);
+                self.skip_size += 1;
+            };
+        }
+    }
+    
+    let mut knot = Knot::new((0..256).into_iter().collect::<Vec<u32>>());
+    knot.hash(d_day10.split(',').map(|v| {
+        v.parse::<u32>().unwrap()
+    }).collect());
+
+    println!("Day 10, Part 1: {}", knot.list[0] * knot.list[1]);
+}
