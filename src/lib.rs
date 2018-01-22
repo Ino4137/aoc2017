@@ -2,6 +2,7 @@
 #![allow(non_upper_case_globals)]
 #![allow(unused_assignments)]
 #![allow(unused_variables)]
+#![allow(overflowing_literals)]
 
 mod data;
 use data::*;
@@ -997,4 +998,104 @@ pub fn day10_1() {
     }).collect());
 
     println!("Day 10, Part 1: {}", knot.list[0] * knot.list[1]);
+}
+
+pub fn day10_2() {
+    #[derive(Debug)]
+    struct Knot {
+        list: Vec<u32>,
+        curr_pos: u32,
+        skip_size: u32
+    }
+    impl Knot {
+        fn new(list: Vec<u32>) -> Knot {
+            Knot {
+                list,
+                curr_pos: 0,
+                skip_size: 0,
+            }
+        }
+        fn incr_pos(&mut self, chan: u32) {
+            self.curr_pos = (self.curr_pos + chan + self.skip_size) % 256
+
+        }
+        fn dense_hash(&self) {
+            let mut t: Vec<u32> = Vec::new();
+            let mut list = self.list.clone();
+
+            for _ in 0..16 {
+                t.push(list.iter().take(16).fold(0, |acc, &n| {acc ^ n}));
+                list = list.into_iter().skip(16).collect();
+            }
+
+            print!("Day 10, Part 2: ");
+            for x in t.iter() {
+                print!("{:x}", x);
+            }
+        }
+        fn twist(&mut self, length: &u32) {
+            // 0 and 1 change nothing in the list
+            if *length != 0 && *length != 1 {
+                let twisted: Vec<u32> = self.list.clone().into_iter().cycle()
+                    .skip(self.curr_pos as usize)
+                    .take(*length as usize).collect();
+                let mut twisted: Vec<u32> = twisted.into_iter().rev().collect();
+
+                let mut not_taken: Vec<u32> = self.list.clone().into_iter().cycle()
+                    .skip((self.curr_pos + length) as usize)
+                    .take(self.list.len() - *length as usize).collect();
+
+                let mut temp: Vec<u32> = Vec::new();
+                
+                match (self.curr_pos + length).cmp(&(self.list.len() as u32)) {
+                    Greater => {
+                        let len = twisted.len();
+                        let amm_pushed = self.curr_pos + length - self.list.len() as u32;
+                        temp.append(
+                            &mut twisted.clone().into_iter().skip(len - amm_pushed as usize).collect()
+                        );
+                        temp.append(&mut not_taken);
+                        temp.append(
+                            &mut twisted.into_iter().take(len - amm_pushed as usize).collect()
+                        );
+                    },
+                    Equal => {
+                        temp.append(&mut not_taken);
+                        temp.append(&mut twisted);
+                    },
+                    Less => {
+                        let len = not_taken.len();
+                        temp.append(
+                            &mut not_taken.clone().into_iter().skip(len - self.curr_pos as usize).collect()
+                        );
+                        temp.append(&mut twisted);
+                        temp.append(
+                            &mut not_taken.into_iter().take(len - self.curr_pos as usize).collect()
+                        );
+                    }
+                } 
+                self.list = temp
+            }
+        }
+        fn hash(&mut self, lengths: Vec<u32>) {
+            // reverses since it executes by popping them
+            let lengths: Vec<u32> = lengths.into_iter().rev().collect();
+
+            for _ in 0..64 {
+                let mut temp = lengths.clone();
+                while let Some(x) = temp.pop() {
+                    self.twist(&x);    
+                    self.incr_pos(x);
+                    self.skip_size += 1;
+                };
+            }
+            self.dense_hash();
+        }
+    }
+    let mut lengths: Vec<u32> = d_day10.bytes().map(|v| v as u32).collect();
+    lengths.append(&mut vec![17, 31, 73, 47, 23]);
+    let list: Vec<u32> = (0..256).into_iter().collect();
+
+    let mut knot = Knot::new(list);
+    knot.hash(lengths);
 }
