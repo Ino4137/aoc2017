@@ -1188,3 +1188,102 @@ pub fn day11_1() {
     hp.weed();
     println!("Day 11, Part 1: {:?}", hp.distance());
 }
+
+pub fn day11_2() {
+    #[derive(Debug, Clone)]
+    struct HexPathMax {
+        n: u32,
+        ne: u32,
+        se: u32,
+        s: u32,
+        sw: u32,
+        nw: u32,
+        max_dist: u32
+    }
+
+    impl HexPathMax {
+        fn distance(&self) -> u32 {
+            self.n + self.ne + self.se + self.s + self.sw + self.nw
+        }
+        fn weed(&mut self) {
+            // weed out the step-backs
+            if self.n > self.s {
+                self.n -= self.s;
+                self.s = 0;
+            } else {
+                self.s -= self.n;
+                self.n = 0;
+            }
+            if self.ne > self.sw {
+                self.ne -= self.sw;
+                self.sw = 0;
+            } else {
+                self.sw -= self.ne;
+                self.ne = 0;
+            }
+            if self.nw > self.se {
+                self.nw -= self.se;
+                self.se = 0;
+            } else {
+                self.se -= self.nw;
+                self.nw = 0;
+            }
+
+            // weed out the unnecessary steps
+            if self.ne > self.s {
+                self.ne -= self.s; 
+            } else {
+                self.s -= self.ne;
+            }
+            if self.ne > self.nw {
+                self.ne -= self.nw; 
+            } else {
+                self.nw -= self.ne;
+            }
+            if self.n > self.se {
+                self.n -= self.se; 
+            } else {
+                self.se -= self.n;
+            }
+            if self.n > self.sw {
+                self.n -= self.sw; 
+            } else {
+                self.sw -= self.n;
+            } 
+        }
+        fn new(path: &'static str) -> HexPathMax {
+            let mut n = 0;
+            let mut ne = 0;
+            let mut se = 0;
+            let mut s = 0;
+            let mut sw = 0;
+            let mut nw = 0;
+            let mut max_dist = 0;
+            let _: Vec<_> = path.split(',').map(|dir| {
+                match dir {
+                    "n"  => n += 1,
+                    "ne" => ne += 1,
+                    "se" => se += 1,
+                    "s"  => s += 1,
+                    "sw" => sw += 1,
+                    "nw" => nw += 1,
+                    _    => unreachable!()
+                }
+
+                // after every step it calculates the distance and if greater than max, assigns it
+                let mut t = HexPathMax {n, ne, se, s, sw, nw, max_dist};
+                t.weed();
+                let d = t.distance();
+                if d > max_dist {
+                    max_dist = d;
+                }
+
+            }).collect();
+
+            HexPathMax {n, ne, se, s, sw, nw, max_dist}
+        }
+    }
+
+    let hp = HexPathMax::new(d_day11);
+    println!("Day 11, Part 2: {:?}", hp.max_dist);
+}
