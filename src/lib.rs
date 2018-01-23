@@ -2,7 +2,6 @@
 #![allow(non_upper_case_globals)]
 #![allow(unused_assignments)]
 #![allow(unused_variables)]
-#![allow(overflowing_literals)]
 
 mod data;
 use data::*;
@@ -1286,4 +1285,77 @@ pub fn day11_2() {
 
     let hp = HexPathMax::new(d_day11);
     println!("Day 11, Part 2: {:?}", hp.max_dist);
+}
+
+pub fn day12_1() {
+    let mut pipe_map: HashMap<u32, Vec<u32>> = HashMap::new();
+
+    for line in d_day12.lines() {
+        let line = line.split_whitespace().collect::<Vec<&str>>();       
+        let mut list = Vec::new();
+
+        for x in 2..line.len() {
+            list.push(line[x].chars().take_while(|c| c.is_digit(10))
+                .collect::<String>().parse::<u32>().unwrap());
+        }
+
+        pipe_map.insert(line[0].parse().unwrap(), list);
+    }
+
+    fn mark_connected(num: &u32, hm: &HashMap<u32, Vec<u32>>, seen: &mut Vec<u32>) -> u32 {
+        let list = hm.get(num).unwrap();
+        let mut sum = 0;
+        for v in list {  
+            // I REALLY like how this debug print looks, and that is why i left it here
+            println!("{} : {} <- {:?}", num, v, list);
+            if !seen.contains(&v) {
+                sum += 1;
+                seen.push(*v);
+                sum += mark_connected(v, &hm, seen);
+            }
+        }
+        sum
+    }
+    let mut seen = Vec::new();
+
+    println!("Day 12, Part 1: {}", mark_connected(&0, &pipe_map, &mut seen));
+}
+
+pub fn day12_2() {
+    let mut pipe_map: HashMap<u32, Vec<u32>> = HashMap::new();
+
+    for line in d_day12.lines() {
+        let line = line.split_whitespace().collect::<Vec<&str>>();       
+        let mut list = Vec::new();
+
+        for x in 2..line.len() {
+            list.push(line[x].chars().take_while(|c| c.is_digit(10))
+                .collect::<String>().parse::<u32>().unwrap());
+        }
+
+        pipe_map.insert(line[0].parse().unwrap(), list);
+    }
+
+    fn mark_connected(num: &u32, hm: &HashMap<u32, Vec<u32>>, seen: &mut Vec<u32>) {
+        let list = hm.get(num).unwrap();
+        for v in list {
+            // I REALLY like how this debug print looks, and that is why i left it here        
+            println!("{} : {} <- {:?}", num, v, list);
+            if !seen.contains(&v) {
+                seen.push(*v);
+                mark_connected(v, &hm, seen);
+            }
+        }
+    }
+    let mut seen = Vec::new();
+    let mut gr_count = 0;
+    for n in 0..2000 {
+        if !seen.contains(&n) {
+            mark_connected(&n, &pipe_map, &mut seen);
+            gr_count += 1;
+        }
+    }
+    
+
+    println!("Day 12, Part 2: {}", gr_count);
 }
