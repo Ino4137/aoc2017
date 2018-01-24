@@ -1359,3 +1359,119 @@ pub fn day12_2() {
 
     println!("Day 12, Part 2: {}", gr_count);
 }
+
+pub fn day13_1() {
+    #[allow(dead_code)]
+    #[derive(Debug)]
+    enum Enterance {
+        Caught(usize),
+        Free
+    }
+
+    #[allow(dead_code)]
+    #[derive(Debug)]
+    enum Way {
+        Up,
+        Down
+    }
+
+    #[derive(Debug)]
+    struct Layer {
+        layer: usize, // if 0 -> empty
+        pos: usize,
+        way: Way
+    }
+
+    impl Layer {
+        fn new(layer: usize) -> Layer {
+            Layer { layer, pos: 0 , way: Way::Down}
+        }
+        
+        fn tick(&mut self) {
+            if self.layer != 0 {
+                'lewp: loop {
+                    match self.way {
+                        Way::Down => {
+                            if self.pos + 1 == self.layer {
+                                self.way = Way::Up;
+                                continue 'lewp
+                            }
+                            self.pos += 1;
+                            break 'lewp
+                        },
+                        Way::Up   => {
+                            if self.pos == 0 {
+                                self.way = Way::Down;
+                                continue 'lewp
+                            }
+                            self.pos -= 1;
+                            break 'lewp
+                        } 
+                    }
+                }
+            }
+        }
+
+        fn enter(&self) -> Enterance {
+            if self.pos == 0 && self.layer != 0 {
+                Enterance::Caught(self.layer)
+            } else {
+                Enterance::Free
+            }
+        }
+    }
+
+    #[derive(Debug)]
+    struct Firewall {
+        firewall: HashMap<usize, Layer>
+    }
+
+    impl Firewall {
+        fn new(data: &str) -> Firewall {
+            let mut firewall = HashMap::new();
+
+            for line in data.lines() {
+                let mut line: Vec<&str> = line.split_whitespace().collect();
+                let val: usize = line[1].parse().unwrap();
+                let id: usize  = line[0].chars().take_while(|w| w.is_digit(10))
+                    .collect::<String>().parse().unwrap();
+
+                firewall.insert(id, Layer::new(val));
+            }
+
+            for n in 0..*firewall.keys().max().unwrap() {
+                firewall.entry(n).or_insert(Layer::new(0));
+            }
+
+            Firewall { firewall }
+        }
+
+        fn traverse(&mut self) -> usize {
+            let mut severity = 0;
+
+            for at in 0..*self.firewall.keys().max().unwrap() + 1 {
+                if let Some(l) = self.firewall.get_mut(&at) {
+
+                    // if caught, increase severity
+                    if let Enterance::Caught(depth) = l.enter() {
+                        println!("Caught at: {}, adding: {}", at, at * depth);
+                        severity += at * depth;
+                    } else {
+                        println!("Free at: {}", at);
+                    }
+                } else { unreachable!() }
+
+                // move all pieces
+                for layer in self.firewall.values_mut() {
+                    layer.tick();
+                }
+            }
+
+            severity
+        }
+    }
+
+    let mut firewall = Firewall::new(d_day13);
+
+    println!("Day 13, Part 1: {:?}", firewall.traverse());
+}
