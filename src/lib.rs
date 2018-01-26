@@ -1601,3 +1601,141 @@ pub fn day13_2() {
 
     println!("Day 13, Part 2: {:?}", delay);
 }
+
+pub fn day14_1() {
+    #[derive(Debug, Clone)]
+    struct Knot {
+        list: Vec<u32>,
+        curr_pos: u32,
+        skip_size: u32
+    }
+    impl Knot {
+        fn new(list: Vec<u32>) -> Knot {
+            Knot {
+                list,
+                curr_pos: 0,
+                skip_size: 0,
+            }
+        }
+        fn incr_pos(&mut self, chan: u32) {
+            self.curr_pos = (self.curr_pos + chan + self.skip_size) % 256
+
+        }
+        fn dense_hash(&self) -> Vec<u32> {
+            let mut t: Vec<u32> = Vec::new();
+            let mut list = self.list.clone();
+
+            for _ in 0..16 {
+                t.push(list.iter().take(16).fold(0, |acc, &n| {acc ^ n}));
+                list = list.into_iter().skip(16).collect();
+            }
+            /*
+            print!("Day 10, Part 2: ");
+            for x in t.iter() {
+                print!("{:x}", x);
+            }*/
+            t
+        }
+        fn twist(&mut self, length: &u32) {
+            // 0 and 1 change nothing in the list
+            if *length != 0 && *length != 1 {
+                let twisted: Vec<u32> = self.list.clone().into_iter().cycle()
+                    .skip(self.curr_pos as usize)
+                    .take(*length as usize).collect();
+                let mut twisted: Vec<u32> = twisted.into_iter().rev().collect();
+
+                let mut not_taken: Vec<u32> = self.list.clone().into_iter().cycle()
+                    .skip((self.curr_pos + length) as usize)
+                    .take(self.list.len() - *length as usize).collect();
+
+                let mut temp: Vec<u32> = Vec::new();
+                
+                match (self.curr_pos + length).cmp(&(self.list.len() as u32)) {
+                    Greater => {
+                        let len = twisted.len();
+                        let amm_pushed = self.curr_pos + length - self.list.len() as u32;
+                        temp.append(
+                            &mut twisted.clone().into_iter().skip(len - amm_pushed as usize).collect()
+                        );
+                        temp.append(&mut not_taken);
+                        temp.append(
+                            &mut twisted.into_iter().take(len - amm_pushed as usize).collect()
+                        );
+                    },
+                    Equal => {
+                        temp.append(&mut not_taken);
+                        temp.append(&mut twisted);
+                    },
+                    Less => {
+                        let len = not_taken.len();
+                        temp.append(
+                            &mut not_taken.clone().into_iter().skip(len - self.curr_pos as usize).collect()
+                        );
+                        temp.append(&mut twisted);
+                        temp.append(
+                            &mut not_taken.into_iter().take(len - self.curr_pos as usize).collect()
+                        );
+                    }
+                } 
+                self.list = temp
+            }
+        }
+        fn hash(&mut self, lengths: Vec<u32>) -> Vec<u32> {
+            // reverses since it executes by popping them
+            let lengths: Vec<u32> = lengths.into_iter().rev().collect();
+
+            for _ in 0..64 {
+                let mut temp = lengths.clone();
+                while let Some(x) = temp.pop() {
+                    self.twist(&x);    
+                    self.incr_pos(x);
+                    self.skip_size += 1;
+                };
+            }
+            self.dense_hash()
+        }
+    }
+    let mut entries: Vec<Vec<u32>> = Vec::new();
+
+    for n in 0..128 {
+        let mut temp: Vec<u32> = format!("{}-{}", d_day14, n).bytes().map(|v| v as u32).collect();
+        temp.append(&mut vec![17, 31, 73, 47, 23]);
+        entries.push(temp);
+    }
+    let list: Vec<u32> = (0..256).into_iter().collect();
+    let mut hex_to_bin:HashMap<char, Vec<u32>> = HashMap::new();
+    hex_to_bin.insert('0', vec![0,0,0,0]);
+    hex_to_bin.insert('1', vec![0,0,0,1]);
+    hex_to_bin.insert('2', vec![0,0,1,0]);
+    hex_to_bin.insert('3', vec![0,0,1,1]);
+    hex_to_bin.insert('4', vec![0,1,0,0]);
+    hex_to_bin.insert('5', vec![0,1,0,1]);
+    hex_to_bin.insert('6', vec![0,1,1,0]);
+    hex_to_bin.insert('7', vec![0,1,1,1]);
+    hex_to_bin.insert('8', vec![1,0,0,0]);
+    hex_to_bin.insert('9', vec![1,0,0,1]);
+    hex_to_bin.insert('a', vec![1,0,1,0]);
+    hex_to_bin.insert('b', vec![1,0,1,1]);
+    hex_to_bin.insert('c', vec![1,1,0,0]);
+    hex_to_bin.insert('d', vec![1,1,0,1]);
+    hex_to_bin.insert('e', vec![1,1,1,0]);
+    hex_to_bin.insert('f', vec![1,1,1,1]);
+
+    let knot = Knot::new(list);
+    let mut sum = 0;
+    while let Some(entry) = entries.pop() {
+        let mut kknot = knot.clone();
+        let mut as_hex = Vec::new();
+        for x in kknot.hash(entry) {
+            as_hex.push(format!("{:x}",x));
+        }
+        for v in as_hex {
+            for c in v.chars() {
+                if let Some(e) = hex_to_bin.get(&c) {
+                    sum += e.iter().sum::<u32>();
+                }
+            }
+        }  
+    }
+    println!("Day 14, Part 1: {}", sum);
+}

@@ -5884,3 +5884,5 @@ pub static d_day13: &'static str = "0: 3
 84: 14
 94: 14
 96: 14";
+
+pub static d_day14: &'static str = "uugsqrei";
