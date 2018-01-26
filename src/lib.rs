@@ -1454,10 +1454,7 @@ pub fn day13_1() {
 
                     // if caught, increase severity
                     if let Enterance::Caught(depth) = l.enter() {
-                        println!("Caught at: {}, adding: {}", at, at * depth);
                         severity += at * depth;
-                    } else {
-                        println!("Free at: {}", at);
                     }
                 } else { unreachable!() }
 
@@ -1474,4 +1471,133 @@ pub fn day13_1() {
     let mut firewall = Firewall::new(d_day13);
 
     println!("Day 13, Part 1: {:?}", firewall.traverse());
+}
+
+pub fn day13_2() {
+    #[allow(dead_code)]
+    #[derive(Debug)]
+    enum Enterance {
+        Caught(usize),
+        Free
+    }
+
+    #[allow(dead_code)]
+    #[derive(Debug, Clone)]
+    enum Way {
+        Up,
+        Down
+    }
+
+    #[derive(Debug, Clone)]
+    struct Layer {
+        layer: usize, // if 0 -> empty
+        pos: usize,
+        way: Way
+    }
+
+    impl Layer {
+        fn new(layer: usize) -> Layer {
+            Layer { layer, pos: 0 , way: Way::Down}
+        }
+        
+        fn tick(&mut self) {
+            if self.layer != 0 {
+                'lewp: loop {
+                    match self.way {
+                        Way::Down => {
+                            if self.pos + 1 == self.layer {
+                                self.way = Way::Up;
+                                continue 'lewp
+                            }
+                            self.pos += 1;
+                            break 'lewp
+                        },
+                        Way::Up   => {
+                            if self.pos == 0 {
+                                self.way = Way::Down;
+                                continue 'lewp
+                            }
+                            self.pos -= 1;
+                            break 'lewp
+                        } 
+                    }
+                }
+            }
+        }
+
+        fn enter(&self) -> Enterance {
+            if self.pos == 0 && self.layer != 0 {
+                Enterance::Caught(self.layer)
+            } else {
+                Enterance::Free
+            }
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    struct Firewall {
+        firewall: HashMap<usize, Layer>
+    }
+
+    impl Firewall {
+        fn new(data: &str) -> Firewall {
+            let mut firewall = HashMap::new();
+
+            for line in data.lines() {
+                let mut line: Vec<&str> = line.split_whitespace().collect();
+                let val: usize = line[1].parse().unwrap();
+                let id: usize  = line[0].chars().take_while(|w| w.is_digit(10))
+                    .collect::<String>().parse().unwrap();
+
+                firewall.insert(id, Layer::new(val));
+            }
+
+            for n in 0..*firewall.keys().max().unwrap() {
+                firewall.entry(n).or_insert(Layer::new(0));
+            }
+
+            Firewall { firewall }
+        }
+
+        fn move_time(&mut self) {
+            for layer in self.firewall.values_mut() {
+                layer.tick();
+            }
+        }
+
+        fn traverse(&mut self) -> Enterance {         
+            for at in 0..*self.firewall.keys().max().unwrap() + 1 {
+                if let Some(l) = self.firewall.get_mut(&at) {
+
+                    // if caught, return 1
+                    if let Enterance::Caught(depth) = l.enter() {
+                        return Enterance::Caught(at)
+                    }
+                } else { unreachable!() }
+
+                self.move_time();
+            }
+
+            Enterance::Free
+        }
+    }
+
+    let mut firewall = Firewall::new(d_day13);
+    let mut delay = 0;
+
+    loop {
+        // takes a bit due to all the cloning involved
+        firewall.move_time();
+        let firewallc = firewall.clone();
+        delay += 1;
+        print!("Delay {}", delay);
+        
+        if let Enterance::Caught(at) = firewall.traverse() {
+            println!(", Caught at: {}", at);
+        } else { break }
+        firewall = firewallc;
+    }
+    println!(", Finished");
+
+    println!("Day 13, Part 2: {:?}", delay);
 }
