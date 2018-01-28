@@ -1977,3 +1977,93 @@ pub fn day15_2() {
     }
     println!("Day 15, Part 2: {}", judge_sum);
 }
+
+pub fn day16_1() {
+    let mut programs = Vec::new();
+    for c in 97..113u8 {
+        programs.push(c as char);
+    }
+
+    fn spin(n: u8, programs: &mut Vec<char>) {
+        for _ in 0..n {
+            let t = programs.pop().unwrap();
+            programs.insert(0, t);
+        }
+    }
+    
+    fn partner(prog1: char, prog2: char, programs: &mut Vec<char>) {
+        let x = programs.iter().position(|&c| c == prog1).unwrap();
+        let y = programs.iter().position(|&c| c == prog2).unwrap();
+        programs.swap(x, y);
+    } 
+
+    for instr in d_day16.split(',') {
+        let instr: Vec<char> = instr.chars().collect();
+        match instr[0] {
+            's' => spin(instr.iter().skip(1).collect::<String>()
+                .parse().unwrap(), &mut programs),
+
+            'x' => programs.swap(instr.iter()
+                                .skip(1).take_while(|&c| c.is_digit(10))
+                                .collect::<String>().parse().unwrap(),
+                instr.iter().skip(1).skip_while(|&c| c.is_digit(10))
+                    .skip(1).take_while(|&c| c.is_digit(10))
+                    .collect::<String>().parse().unwrap()),
+
+            'p' => partner(instr[1], instr[3], &mut programs),
+            _ => unreachable!(),
+        }
+    }
+    println!("Day 16, Part 1: {:?}", programs.iter().collect::<String>());
+}
+
+pub fn day16_2() {
+    let mut programs = Vec::new();
+    for c in 97..113u8 {
+        programs.push(c as char);
+    }
+
+    fn spin(n: u8, programs: &mut Vec<char>) {
+        for _ in 0..n {
+            let t = programs.pop().unwrap();
+            programs.insert(0, t);
+        }
+    }
+    
+    fn partner(prog1: char, prog2: char, programs: &mut Vec<char>) {
+        let x = programs.iter().position(|&c| c == prog1).unwrap();
+        let y = programs.iter().position(|&c| c == prog2).unwrap();
+        programs.swap(x, y);
+    } 
+    let mut cache: HashMap<Vec<char>, Vec<char>> = HashMap::new();
+
+    for n in 0..1_000_000_000 {
+        if n % 5_000_000 == 0 {
+            println!("Iteration {}/1_000_000_000", n);
+        }
+        if cache.keys().any(|ref k| **k == programs) {
+            programs = cache.get(&programs).unwrap().clone();
+            continue
+        }
+        let state = programs.clone();
+        for instr in d_day16.split(',') {
+            let instr: Vec<char> = instr.chars().collect();
+            match instr[0] {
+                's' => spin(instr.iter().skip(1).collect::<String>()
+                    .parse().unwrap(), &mut programs),
+
+                'x' => programs.swap(instr.iter()
+                                    .skip(1).take_while(|&c| c.is_digit(10))
+                                    .collect::<String>().parse().unwrap(),
+                    instr.iter().skip(1).skip_while(|&c| c.is_digit(10))
+                        .skip(1).take_while(|&c| c.is_digit(10))
+                        .collect::<String>().parse().unwrap()),
+
+                'p' => partner(instr[1], instr[3], &mut programs),
+                _ => unreachable!(),
+            }
+        }
+        cache.insert(state, programs.clone());
+    }
+    println!("Day 16, Part 2: {:?}", programs.iter().collect::<String>());
+}
