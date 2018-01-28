@@ -1953,3 +1953,27 @@ pub fn day15_1() {
     }
     println!("Day 15, Part 1: {}", judge_sum);
 }
+
+pub fn day15_2() {
+    let a_fact = 16807;
+    let b_fact = 48271;
+    let guard = 2147483647u64;
+    let mut judge_sum = 0;
+    let mut state_a = d_day15_A;
+    let mut state_b = d_day15_B;
+    for _ in 0..5_000_000 {
+        state_a = state_a * a_fact % guard;
+        while state_a % 4 != 0 {
+            state_a = state_a * a_fact % guard;
+        }
+        state_b = state_b * b_fact % guard;
+        while state_b % 8 != 0 {
+            state_b = state_b * b_fact % guard;
+        }
+        
+        if state_a as u16 == state_b as u16 {
+            judge_sum += 1;
+        }
+    }
+    println!("Day 15, Part 2: {}", judge_sum);
+}
