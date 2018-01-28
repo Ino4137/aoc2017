@@ -2,6 +2,7 @@
 #![allow(non_upper_case_globals)]
 #![allow(unused_assignments)]
 #![allow(unused_variables)]
+#![allow(unused_must_use)]
 
 #[macro_use]
 extern crate lazy_static;
@@ -1933,4 +1934,22 @@ pub fn day14_2() {
         }
     } 
     println!("Day 14, Part 2: {}", groups);
+}
+
+pub fn day15_1() {
+    let a_fact = 16807;
+    let b_fact = 48271;
+    let guard = 2147483647u64;
+    let mut judge_sum = 0;
+    let mut state_a = d_day15_A;
+    let mut state_b = d_day15_B;
+    for _ in 0..40000000 {
+        state_a = (state_a * a_fact) % guard;
+        state_b = (state_b * b_fact) % guard;
+        
+        if state_a as u16 == state_b as u16 {
+            judge_sum += 1;
+        }
+    }
+    println!("Day 15, Part 1: {}", judge_sum);
 }
