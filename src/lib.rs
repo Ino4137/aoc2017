@@ -2067,3 +2067,72 @@ pub fn day16_2() {
     }
     println!("Day 16, Part 2: {:?}", programs.iter().collect::<String>());
 }
+
+pub fn day17_1() {
+    #[derive(Debug, Clone)]
+    struct Spinlock {
+        state: Vec<u32>,
+        pos: usize,
+        max: u32,
+        hop_by: usize
+    }
+    impl Spinlock {
+        fn new(hop_by: usize) -> Spinlock {
+            Spinlock {
+                state: vec![0],
+                pos: 0,
+                max: 0,
+                hop_by
+            }
+        }
+
+        fn spin(&mut self) {
+            self.pos = (self.pos + self.hop_by) % self.state.len() + 1;
+            self.max += 1;
+            self.state.insert(self.pos, self.max);
+        }
+    }
+
+    let mut spin_l = Spinlock::new(d_day17);
+    for _ in 0..2017 {
+        spin_l.spin();
+    }
+
+    println!("Day 17, Part 1: {}", spin_l.state[spin_l.pos + 1]);
+}
+
+pub fn day17_2() {
+    #[derive(Debug, Clone)]
+    struct Spinlock {
+        state: Vec<u32>,
+        pos: usize,
+        max: u32,
+        hop_by: usize
+    }
+    impl Spinlock {
+        fn new(hop_by: usize) -> Spinlock {
+            Spinlock {
+                state: vec![0],
+                pos: 0,
+                max: 0,
+                hop_by
+            }
+        }
+
+        fn spin(&mut self, len: usize) {
+            self.pos = (self.pos + self.hop_by) % len + 1;
+            self.max += 1;
+            if self.pos == 1 {
+                self.state.insert(1, self.max);
+            }
+        }
+    }
+
+    let mut spin_l = Spinlock::new(d_day17);
+    for n in 1..50_000_001 {
+        spin_l.spin(n);
+    }
+
+    // 0 is always at 0'th
+    println!("Day 17, Part 2: {}", spin_l.state[1]);
+}
