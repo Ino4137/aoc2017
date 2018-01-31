@@ -2136,3 +2136,154 @@ pub fn day17_2() {
     // 0 is always at 0'th
     println!("Day 17, Part 2: {}", spin_l.state[1]);
 }
+
+pub fn day18_1() {
+
+    #[derive(Debug, Clone, Copy)]
+    enum InstrRes {
+        Sound(i64),
+        Jump(i64),
+        Recover(i64),
+        None
+    }
+
+    #[derive(Debug, Clone)]
+    enum Instr {
+        Snd(char),
+        Rcv(char),
+        Set(char, String),
+        Add(char, String),
+        Mul(char, String),
+        Mod(char, String),
+        Jgz(char, String)
+    }
+
+    #[derive(Debug, Clone)]
+    struct InstrSet {
+        registers: HashMap<char, i64>,
+        instr: Vec<Instr>,
+        pos: usize,
+        cache: Option<i64>,
+    }
+
+    impl InstrSet {
+        fn new(list: &str) -> InstrSet {
+            let mut instr = Vec::new();
+            let mut registers: HashMap<char, i64> = HashMap::new();
+
+            // parse the instructions
+            for instru in list.lines() {
+                instr.push(Instr::from(instru));
+            }
+
+            // initialise the registers
+            for c in 97..123u8 {
+                registers.insert(c as char, 0);
+            }
+
+            InstrSet{ registers, instr, pos: 0, cache: None }
+        }
+
+        fn run(&mut self) -> i64 {
+            loop {
+                match self.execute() {
+                    InstrRes::None         => self.pos += 1,
+                    InstrRes::Jump(offset) => self.pos = (self.pos as i64 + offset) as usize,
+                    InstrRes::Sound(val)   => {
+                        self.cache = Some(val);
+                        self.pos += 1;
+                    },
+                    InstrRes::Recover(val) => break val,
+                }
+            }
+        }
+
+        fn execute(&mut self) -> InstrRes {
+            match self.instr[self.pos] {
+                Instr::Snd(ident) => {       
+                    InstrRes::Sound(*self.registers.get(&ident).unwrap())
+                },
+                Instr::Rcv(ident) => {
+                    if self.registers.get(&ident).unwrap() != &0 {
+                        InstrRes::Recover(self.cache.unwrap())
+                    } else {
+                        InstrRes::None
+                    }
+                },
+                Instr::Jgz(ident, ref val) => {
+                    let v: i64 = if val.parse::<i64>().is_err() {
+                        *self.registers.get(&val.chars().next().unwrap()).unwrap()
+                    } else {
+                        val.parse().unwrap()
+                    };
+
+                    if self.registers.get(&ident).unwrap() > &0 {
+                        InstrRes::Jump(v)
+                    } else {
+                        InstrRes::None
+                    }
+                },
+                Instr::Set(ident, ref val) => {
+                    let v: i64 = if val.parse::<i64>().is_err() {
+                        *self.registers.get(&val.chars().next().unwrap()).unwrap()
+                    } else {
+                        val.parse().unwrap()
+                    };
+
+                    *self.registers.get_mut(&ident).unwrap() = v;
+                    InstrRes::None
+                },
+                Instr::Add(ident, ref val) => {
+                    let v: i64 = if val.parse::<i64>().is_err() {
+                        *self.registers.get(&val.chars().next().unwrap()).unwrap()
+                    } else {
+                        val.parse().unwrap()
+                    };
+
+                    *self.registers.get_mut(&ident).unwrap() += v;
+                    InstrRes::None
+                },
+                Instr::Mul(ident, ref val) => {
+                    let v: i64 = if val.parse::<i64>().is_err() {
+                        *self.registers.get(&val.chars().next().unwrap()).unwrap()
+                    } else {
+                        val.parse().unwrap()
+                    };
+
+                    *self.registers.get_mut(&ident).unwrap() *= v;
+                    InstrRes::None
+                },
+                Instr::Mod(ident, ref val) => {
+                    let v: i64 = if val.parse::<i64>().is_err() {
+                        *self.registers.get(&val.chars().next().unwrap()).unwrap()
+                    } else {
+                        val.parse().unwrap()
+                    };
+
+                    *self.registers.get_mut(&ident).unwrap() %= v;
+                    InstrRes::None
+                },
+            }
+        }
+    }
+
+    impl<'a> From<&'a str> for Instr {
+        fn from(cmd: &'a str) -> Self {
+            let cmd: Vec<&str> = cmd.split_whitespace().collect();
+            let ident = cmd[1].to_owned().remove(0);
+
+            match cmd[0] {
+                "snd" => Instr::Snd(ident),
+                "rcv" => Instr::Rcv(ident),
+                "add" => Instr::Add(ident, cmd[2].to_owned()),
+                "set" => Instr::Set(ident, cmd[2].to_owned()),
+                "mul" => Instr::Mul(ident, cmd[2].to_owned()),
+                "mod" => Instr::Mod(ident, cmd[2].to_owned()),
+                "jgz" => Instr::Jgz(ident, cmd[2].parse().unwrap()),
+                _     => unimplemented!()
+            }
+        }
+    }
+
+    println!("Day 18, Part 1: {}", InstrSet::new(d_day18).run());
+}
