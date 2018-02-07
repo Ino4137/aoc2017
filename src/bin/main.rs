@@ -1,5 +1,5 @@
 extern crate aoc_2017;
 
 fn main() {
-    aoc_2017::day18_1();
+    aoc_2017::day18_2();
 }

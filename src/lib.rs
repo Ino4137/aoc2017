@@ -2287,3 +2287,206 @@ pub fn day18_1() {
 
     println!("Day 18, Part 1: {}", InstrSet::new(d_day18).run());
 }
+
+use std::collections::VecDeque;
+pub fn day18_2() {
+
+    #[derive(Debug, Clone, Copy)]
+    enum InstrRes {
+        Sendv(i64),
+        Jump(i64),
+        Recieve(char),
+        None
+    }
+
+    #[derive(Debug, Clone)]
+    enum Instr {
+        Snd(char),
+        Rcv(char),
+        Set(char, String),
+        Add(char, String),
+        Mul(char, String),
+        Mod(char, String),
+        Jgz(char, String)
+    }
+
+    #[derive(Debug, Clone)]
+    struct InstrSet {
+        registers: HashMap<char, i64>,
+        instr: Vec<Instr>,
+        pos: usize,
+        cache: Option<i64>,
+    }
+
+    impl InstrSet {
+        fn new(list: &str) -> InstrSet {
+            let mut instr = Vec::new();
+            let mut registers: HashMap<char, i64> = HashMap::new();
+
+            // parse the instructions
+            for instru in list.lines() {
+                instr.push(Instr::from(instru));
+            }
+
+            // initialise the registers
+            for c in 97..123u8 {
+                registers.insert(c as char, 0);
+            }
+
+            InstrSet{ registers, instr, pos: 0, cache: None }
+        }
+
+        fn execute(&mut self) -> InstrRes {
+            match self.instr[self.pos] {
+                Instr::Snd(ident) => {       
+                    InstrRes::Sendv(*self.registers.get(&ident).unwrap())
+                },
+                Instr::Rcv(ident) => {
+                    InstrRes::Recieve(ident)
+                },
+                Instr::Jgz(ident, ref val) => {
+                    let v: i64 = if val.parse::<i64>().is_err() {
+                        *self.registers.get(&val.chars().next().unwrap()).unwrap()
+                    } else {
+                        val.parse().unwrap()
+                    };
+
+                    if ident.is_digit(10) {
+                        if ident > '0' {
+                            return InstrRes::Jump(v)
+                        } else {
+                            return InstrRes::None
+                        }
+                    }
+
+                    if let Some(x) = self.registers.get(&ident) {
+                        if x > &0 {
+                            InstrRes::Jump(v)
+                        } else {
+                            InstrRes::None
+                        }
+                    } else {
+                        println!("IDENT: {}", ident);
+                        unreachable!()
+                    }
+                },
+                Instr::Set(ident, ref val) => {
+                    let v: i64 = if val.parse::<i64>().is_err() {
+                        *self.registers.get(&val.chars().next().unwrap()).unwrap()
+                    } else {
+                        val.parse().unwrap()
+                    };
+
+                    *self.registers.get_mut(&ident).unwrap() = v;
+                    InstrRes::None
+                },
+                Instr::Add(ident, ref val) => {
+                    let v: i64 = if val.parse::<i64>().is_err() {
+                        *self.registers.get(&val.chars().next().unwrap()).unwrap()
+                    } else {
+                        val.parse().unwrap()
+                    };
+
+                    *self.registers.get_mut(&ident).unwrap() += v;
+                    InstrRes::None
+                },
+                Instr::Mul(ident, ref val) => {
+                    let v: i64 = if val.parse::<i64>().is_err() {
+                        *self.registers.get(&val.chars().next().unwrap()).unwrap()
+                    } else {
+                        val.parse().unwrap()
+                    };
+
+                    *self.registers.get_mut(&ident).unwrap() *= v;
+                    InstrRes::None
+                },
+                Instr::Mod(ident, ref val) => {
+                    let v: i64 = if val.parse::<i64>().is_err() {
+                        *self.registers.get(&val.chars().next().unwrap()).unwrap()
+                    } else {
+                        val.parse().unwrap()
+                    };
+
+                    *self.registers.get_mut(&ident).unwrap() %= v;
+                    InstrRes::None
+                },
+            }
+        }
+    }
+
+    impl<'a> From<&'a str> for Instr {
+        fn from(cmd: &'a str) -> Self {
+            let cmd: Vec<&str> = cmd.split_whitespace().collect();
+            let ident = cmd[1].to_owned().remove(0);
+
+            match cmd[0] {
+                "snd" => Instr::Snd(ident),
+                "rcv" => Instr::Rcv(ident),
+                "add" => Instr::Add(ident, cmd[2].to_owned()),
+                "set" => Instr::Set(ident, cmd[2].to_owned()),
+                "mul" => Instr::Mul(ident, cmd[2].to_owned()),
+                "mod" => Instr::Mod(ident, cmd[2].to_owned()),
+                "jgz" => Instr::Jgz(ident, cmd[2].parse().unwrap()),
+                _     => unimplemented!()
+            }
+        }
+    }
+    let mut zero = InstrSet::new(d_day18);
+    let mut one = InstrSet::new(d_day18);
+    if let Some(v) = one.registers.get_mut(&'p') {
+        *v = 1;
+    } else { unreachable!() }
+    let mut amm = 0;
+    let mut zero_waiting = false;
+    let mut one_waiting = false;
+    let mut zero_sent = VecDeque::new();
+    let mut one_sent = VecDeque::new();
+
+    loop {
+        if !zero_waiting {
+            match zero.execute() {
+                InstrRes::None         => zero.pos += 1,
+                InstrRes::Jump(offset) => zero.pos = (zero.pos as i64 + offset) as usize,
+                InstrRes::Sendv(val)   => {
+                    one_waiting = false;
+                    zero_sent.push_back(val);
+                    zero.pos += 1;
+                },
+                InstrRes::Recieve(val) => {
+                    if let Some(v) = one_sent.pop_front() {
+                        *zero.registers.get_mut(&val).unwrap() = v;
+                        one_waiting = false;
+                        zero.pos += 1;
+                    } else {
+                        zero_waiting = true;
+                    }
+                }
+            }
+        }
+        if !one_waiting {
+            match one.execute() {
+                InstrRes::None         => one.pos += 1,
+                InstrRes::Jump(offset) => one.pos = (one.pos as i64 + offset) as usize,
+                InstrRes::Sendv(val)   => {
+                    zero_waiting = false;
+                    one_sent.push_back(val);
+                    one.pos += 1;
+                    amm += 1;
+                },
+                InstrRes::Recieve(val) => {
+                    if let Some(v) = zero_sent.pop_front() {
+                        *one.registers.get_mut(&val).unwrap() = v;
+                        zero_waiting = false;
+                        one.pos += 1;
+                    } else {
+                        one_waiting = true;
+                    }
+                }
+            }
+        }
+        if zero_waiting && one_waiting {
+            break
+        }
+    }
+    println!("Day 18, Part 2: {}", amm);
+}
