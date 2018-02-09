@@ -1,4 +1,6 @@
 #![feature(trace_macros)]
+#![feature(inclusive_range_syntax)]
+
 #![allow(non_upper_case_globals)]
 #![allow(unused_assignments)]
 #![allow(unused_variables)]
@@ -2489,4 +2491,248 @@ pub fn day18_2() {
         }
     }
     println!("Day 18, Part 2: {}", amm);
+}
+
+pub fn day19_1() {
+    #[derive(Debug, Clone)]
+    enum Tile {
+        Empty,
+        Vertical,
+        Horizontal,
+        Cross,
+        Letter(char)
+    }
+
+    impl Tile {
+        fn new(data: char) -> Tile {
+            match data {
+                ' ' => Tile::Empty,
+                '|' => Tile::Vertical,
+                '-' => Tile::Horizontal,
+                '+' => Tile::Cross,
+                l@'A'...'Z' => Tile::Letter(l),
+                _ => unreachable!()
+            }
+        }
+    }
+
+    #[derive(Debug, PartialOrd, PartialEq)]
+    enum Dir {
+        Up, Right, Down, Left
+    }
+    type Point = (i32, i32);
+
+    let mut plane: HashMap<Point, Tile> = HashMap::new();
+
+    let mut y = 0;
+    for line in d_day19.lines() {
+        let mut x = 0;
+        for point in line.chars() {
+            plane.insert((x, y), Tile::new(point));
+            x += 1;
+        }
+        y += 1;
+    }
+
+    let mut grabbed: Vec<char> = Vec::new();
+    let mut pos: Point = (0, 0);
+    let mut last_pos: Point;
+    let mut dir: Dir = Dir::Down;
+
+    // gets starting point
+    for x in 0.. {
+        if let Some(pt) = plane.get(&(x, 1)) {
+            if let &Tile::Vertical = pt {
+                pos = (x, 1);
+                break
+            }
+        }
+    }
+
+    'main: loop {
+        last_pos = pos;
+        match dir {
+            Dir::Down => {
+                pos = (pos.0, pos.1 + 1);
+            },
+            Dir::Right => {
+                pos = (pos.0 + 1, pos.1);
+            },
+            Dir::Up => {
+                pos = (pos.0, pos.1 - 1);
+            },
+            Dir::Left => {
+                pos = (pos.0 - 1, pos.1);
+            },
+        }
+        match plane.get(&pos).unwrap() {
+            &Tile::Empty => break,
+            &Tile::Letter(l) => {
+                grabbed.push(l);
+            },
+            &Tile::Cross => {
+                for x in -1..=1i32 {
+                    for y in -1..=1i32 {
+                        if (x + y).abs() != 1 || (pos.0 + x, pos.1 + y) == last_pos {
+                            continue
+                        }
+                        let mut tile = &Tile::Empty;
+                        if let Some(t) = plane.get(&(pos.0 + x, pos.1 + y)){
+                            tile = t;
+                        }
+                        match tile {
+                            &Tile::Empty => continue,
+                            _ => {
+                                match (x, y) {
+                                    (-1, 0) => {
+                                        dir = Dir::Left;
+                                    },
+                                    (1, 0) => {
+                                        dir = Dir::Right;
+                                    },
+                                    (0, -1) => {
+                                        dir = Dir::Up;
+                                    },
+                                    (0, 1) => {
+                                        dir = Dir::Down;
+                                    },
+                                    _ => unreachable!()
+                                }
+                                continue 'main
+                            } 
+                        }
+                    }
+                }
+                unreachable!();
+            },
+            _ => continue
+        }
+    }
+
+    println!("Day 19, Part 1: {}", grabbed.iter().collect::<String>());
+}
+
+pub fn day19_2() {
+    #[derive(Debug, Clone)]
+    enum Tile {
+        Empty,
+        Vertical,
+        Horizontal,
+        Cross,
+        Letter(char)
+    }
+
+    impl Tile {
+        fn new(data: char) -> Tile {
+            match data {
+                ' ' => Tile::Empty,
+                '|' => Tile::Vertical,
+                '-' => Tile::Horizontal,
+                '+' => Tile::Cross,
+                l@'A'...'Z' => Tile::Letter(l),
+                _ => unreachable!()
+            }
+        }
+    }
+
+    #[derive(Debug, PartialOrd, PartialEq)]
+    enum Dir {
+        Up, Right, Down, Left
+    }
+    type Point = (i32, i32);
+
+    let mut plane: HashMap<Point, Tile> = HashMap::new();
+
+    let mut y = 0;
+    for line in d_day19.lines() {
+        let mut x = 0;
+        for point in line.chars() {
+            plane.insert((x, y), Tile::new(point));
+            x += 1;
+        }
+        y += 1;
+    }
+
+    let mut grabbed: Vec<char> = Vec::new();
+    let mut pos: Point = (0, 0);
+    let mut last_pos: Point;
+    let mut dir: Dir = Dir::Down;
+    let mut steps = 1;
+
+    // gets starting point
+    for x in 0.. {
+        if let Some(pt) = plane.get(&(x, 1)) {
+            if let &Tile::Vertical = pt {
+                pos = (x, 1);
+                break
+            }
+        }
+    }
+
+    'main: loop {
+        last_pos = pos;
+        match dir {
+            Dir::Down => {
+                pos = (pos.0, pos.1 + 1);
+            },
+            Dir::Right => {
+                pos = (pos.0 + 1, pos.1);
+            },
+            Dir::Up => {
+                pos = (pos.0, pos.1 - 1);
+            },
+            Dir::Left => {
+                pos = (pos.0 - 1, pos.1);
+            },
+        }
+        match plane.get(&pos).unwrap() {
+            &Tile::Empty => break,
+            &Tile::Letter(l) => {
+                grabbed.push(l);
+                steps += 1;
+            },
+            &Tile::Cross => {
+                steps += 1;
+                for x in -1..=1i32 {
+                    for y in -1..=1i32 {
+                        if (x + y).abs() != 1 || (pos.0 + x, pos.1 + y) == last_pos {
+                            continue
+                        }
+                        let mut tile = &Tile::Empty;
+                        if let Some(t) = plane.get(&(pos.0 + x, pos.1 + y)){
+                            tile = t;
+                        }
+                        match tile {
+                            &Tile::Empty => continue,
+                            _ => {
+                                match (x, y) {
+                                    (-1, 0) => {
+                                        dir = Dir::Left;
+                                    },
+                                    (1, 0) => {
+                                        dir = Dir::Right;
+                                    },
+                                    (0, -1) => {
+                                        dir = Dir::Up;
+                                    },
+                                    (0, 1) => {
+                                        dir = Dir::Down;
+                                    },
+                                    _ => unreachable!()
+                                }
+                                continue 'main
+                            } 
+                        }
+                    }
+                }
+                unreachable!();
+            },
+            _ => {
+                steps += 1;
+                continue
+            }
+        }
+    }
+
+    println!("Day 19, Part 2: {}", steps);
 }
