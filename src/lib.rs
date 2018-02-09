@@ -2736,3 +2736,186 @@ pub fn day19_2() {
 
     println!("Day 19, Part 2: {}", steps);
 }
+
+pub fn day20_1() {
+    #[derive(Debug, Clone, Copy)]
+    struct XYZ {
+        x: i64,
+        y: i64,
+        z: i64
+    }
+
+    impl XYZ {
+        fn new(x: i64, y: i64, z: i64) -> XYZ {
+            XYZ { x, y, z }
+        }
+
+        fn distance(&self) -> i64 {
+            self.x.abs() + self.y.abs() + self.z.abs()
+        }
+    }
+
+    impl std::ops::Add for XYZ {
+        type Output = XYZ;
+
+        fn add(self, other: XYZ) -> XYZ {
+            XYZ {
+                x: self.x + other.x,
+                y: self.y + other.y,
+                z: self.z + other.z
+            }
+        }
+    }
+    
+    #[derive(Debug, Clone, Copy)]
+    struct Point3 {
+        pos: XYZ,
+        vel: XYZ,
+        acc: XYZ
+    }
+
+    impl Point3 {
+        fn tick(&mut self) {
+            self.vel = self.vel + self.acc;
+            self.pos = self.pos + self.vel;
+        }
+        fn new(pos: XYZ, vel: XYZ, acc: XYZ) -> Point3 {
+            Point3 { pos, vel, acc }
+        }
+        fn distance(&self) -> i64 {
+            self.pos.distance()
+        }
+    }
+
+    let mut plane: HashMap<u32, Point3> = HashMap::new();
+
+    let mut id = 0;
+    for line in d_day20.lines() {
+        let mut temp_xyz: Vec<XYZ> = Vec::new();
+
+        for block in line.split_whitespace() {
+            let mut temp: Vec<i64> = Vec::new();
+            block.chars()
+                .skip(3)
+                .take_while(|&t| t != '>')
+                .collect::<String>()
+                .split(',')
+                .for_each(|e| {
+                    temp.push(e.parse::<i64>().unwrap())
+                });
+            temp_xyz.push(XYZ::new(temp[0], temp[1], temp[2]));
+        }
+
+        plane.insert(id,
+            Point3::new(temp_xyz[0], temp_xyz[1], temp_xyz[2])
+        );
+        id += 1;
+    }
+
+    // 10000 should be enough
+    for _ in 0..10000 {
+        for n in 0..id {
+            plane.get_mut(&n).unwrap().tick()
+        }
+    }
+
+    let mut min = 0;
+    let mut min_d = i64::max_value();
+    for (k, v) in plane.iter() {
+        if v.distance() < min_d {
+            min = *k;
+            min_d = v.distance();
+        }
+    } 
+    println!("Day 20, Part 1: {:?}", min);
+}
+
+pub fn day20_2() {
+    #[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
+    struct XYZ {
+        x: i64,
+        y: i64,
+        z: i64
+    }
+
+    impl XYZ {
+        fn new(x: i64, y: i64, z: i64) -> XYZ {
+            XYZ { x, y, z }
+        }
+    }
+
+    impl std::ops::Add for XYZ {
+        type Output = XYZ;
+
+        fn add(self, other: XYZ) -> XYZ {
+            XYZ {
+                x: self.x + other.x,
+                y: self.y + other.y,
+                z: self.z + other.z
+            }
+        }
+    }
+    
+    #[derive(Debug, Clone, Copy)]
+    struct Point3 {
+        pos: XYZ,
+        vel: XYZ,
+        acc: XYZ
+    }
+
+    impl Point3 {
+        fn tick(&mut self) {
+            self.vel = self.vel + self.acc;
+            self.pos = self.pos + self.vel;
+        }
+        fn new(pos: XYZ, vel: XYZ, acc: XYZ) -> Point3 {
+            Point3 { pos, vel, acc }
+        }
+    }
+
+    let mut plane: HashMap<u32, Point3> = HashMap::new();
+
+    let mut id = 0;
+    for line in d_day20.lines() {
+        let mut temp_xyz: Vec<XYZ> = Vec::new();
+
+        for block in line.split_whitespace() {
+            let mut temp: Vec<i64> = Vec::new();
+            block.chars()
+                .skip(3)
+                .take_while(|&t| t != '>')
+                .collect::<String>()
+                .split(',')
+                .for_each(|e| {
+                    temp.push(e.parse::<i64>().unwrap())
+                });
+            temp_xyz.push(XYZ::new(temp[0], temp[1], temp[2]));
+        }
+
+        plane.insert(id,
+            Point3::new(temp_xyz[0], temp_xyz[1], temp_xyz[2])
+        );
+        id += 1;
+    }
+
+    // 1000 should be enough
+    for _ in 0..1000 {
+        let mut this_pos: Vec<(u32, XYZ)> = Vec::new();
+        let keys: Vec<u32> = plane.keys().map(|v| *v).collect();
+        for k in keys {
+            let mut particle = plane.get_mut(&k).unwrap();
+            particle.tick();
+            this_pos.push((k, particle.pos));
+        }
+        for i in 0..this_pos.len() {
+            for j in i+1..this_pos.len() {
+                if this_pos[i].1 == this_pos[j].1 {
+                    plane.remove(&this_pos[i].0);
+                    plane.remove(&this_pos[j].0);
+                }
+            }
+        }
+    }
+ 
+    println!("Day 20, Part 2: {:?}", plane.len());
+}
